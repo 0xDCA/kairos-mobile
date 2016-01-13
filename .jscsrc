@@ -1,0 +1,9 @@
+{
+  "preset": "google",
+  "maximumLineLength": {
+    "value": 100,
+    "allExcept": ["urlComments"]
+  },
+  "requireDotNotation": false,
+  "disallowMultipleVarDecl": false
+}

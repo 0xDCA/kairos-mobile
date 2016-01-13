@@ -1,0 +1,18 @@
+{
+  "curly": true,
+  "forin": true,
+  "freeze": true,
+  "nocomma": true,
+  "nonbsp": true,
+  "strict": true,
+  "undef": true,
+  "eqeqeq": true,
+  "eqnull": true,
+  "globals": {
+    "angular": false,
+    "console": false,
+    "_": false,
+    "google": false
+  },
+  "sub": true
+}
