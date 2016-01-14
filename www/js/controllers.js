@@ -86,8 +86,15 @@ angular.module('kairos.controllers', ['kairos.services'])
     if (university == null || major == null) {
       return [];
     }
-    console.log(major);
+
     var retriever = university.retriever;
-    return retriever.getCoursesByName(query, major);
+    return retriever.getCoursesByName(query, major).catch(function(reason) {
+      $ionicPopup.alert({
+        title: 'Error',
+        template: 'No pudimos obtener los cursos en este momento. Inténtalo de nuevo más tarde'
+      });
+
+      return $q.reject(reason);
+    });
   };
 });
