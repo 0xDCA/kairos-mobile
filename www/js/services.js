@@ -64,6 +64,76 @@ angular.module('kairos.services', [])
   };
 })
 
+/**
+ * Provides utilities to handle strings.
+ */
+.factory('stringUtils', function() {
+  'use strict';
+
+  var stringUtils = {
+    /**
+     * Returns an array of the elements that match the given substring, in case insensitive and
+     * diacritic-insensitive way. This function optionally recieves an elementMapping to convert
+     * between an element of elementList and a string.
+     */
+    normalizedSearch: function(substring, elementList, elementMapping) {
+      elementMapping = elementMapping || function(element) {
+        return element;
+      };
+
+      var results = [];
+
+      for (var i = 0; i < elementList.length; ++i) {
+        if (stringUtils.isNormalizedSubstring(substring, elementMapping(elementList[i]))) {
+          results.push(elementList[i]);
+        }
+      }
+
+      return results;
+    },
+
+    /**
+     * Returns a boolean indicating if substring is contained in originalString, in a
+     * case-insensitive and a diacritic-insensitive way.
+     */
+    isNormalizedSubstring: function(substring, originalString) {
+      if (substring === '') {
+        return true;
+      }
+
+      return stringUtils.normalizeString(originalString).indexOf(
+        stringUtils.normalizeString(substring)) !== -1;
+    },
+
+    /**
+     * Returns a normalized form of the string (to perform searches in a case-insensitive and
+     * diacritic-insensitive way).
+     */
+    normalizeString: function(str) {
+      var upperCase = str.toUpperCase();
+
+      // This is just for Spanish. We handle it manually to keep it simple.
+      var diacriticsDict = {
+        'Á': 'A',
+        'É': 'E',
+        'Í': 'I',
+        'Ó': 'O',
+        'Ú': 'U'
+      };
+
+      var result = [];
+      for (var i = 0; i < upperCase.length; ++i) {
+        var char = upperCase.charAt(i);
+        result.push(diacriticsDict[char] == null ? char : diacriticsDict[char]);
+      }
+
+      return result.join('');
+    }
+  };
+
+  return stringUtils;
+})
+
 // Course retrievers START
 //
 // Definitions:

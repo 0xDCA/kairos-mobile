@@ -1,6 +1,7 @@
-angular.module('kairos', ['ionic', 'kairos.controllers', 'kairos.services'])
+angular.module('kairos', ['ionic', 'kairos.controllers', 'kairos.services', 'ion-autocomplete'])
 
-.constant('SiaApiUrl', 'http://sia.bogota.unal.edu.co')
+//.constant('SiaApiUrl', 'http://sia.bogota.unal.edu.co')
+.constant('SiaApiUrl', '/external/siabogota')
 
 .run(function($ionicPlatform, $window) {
   'use strict';

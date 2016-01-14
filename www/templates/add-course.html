@@ -9,16 +9,20 @@
   </ion-header-bar>
   <ion-content class="padding">
     <div class="list list-inset">
-      <label class="item item-select full-width-select">
-        <select ng-model="data.university"
-          ng-options="item.name group by item.category for item in universities |orderBy: item.name
-            track by item.id">
+      <label class="item item-input">
+        <input ion-autocomplete type="text" readonly="readonly" class="ion-autocomplete"
+          autocomplete="off" max-selected-items="1" ng-model="data.university"
+          item-view-value-key="name" items-method="queryUniversities(query, isInitializing)"
+          placeholder="Escribe una unversidad" cancel-label="Cancelar"
+          select-items-label="Selecciona un elemento" selected-items-label="Mi selección: ">
         </select>
       </label>
-      <label class="item item-select full-width-select">
-        <select ng-model="data.major"
-          ng-options="item.name for item in majors |orderBy: item.name track by item.id">
-        </select>
+      <label class="item item-input">
+        <input ion-autocomplete type="text" readonly="readonly" class="ion-autocomplete"
+          autocomplete="off" max-selected-items="1" ng-model="data.major"
+          item-view-value-key="name" items-method="queryMajors(query, isInitializing)"
+          placeholder="Escribe una carrera" cancel-label="Cancelar"
+          select-items-label="Selecciona un elemento" selected-items-label="Mi selección: ">
       </label>
     </div>
     <div class="list list-inset">

@@ -12,8 +12,8 @@ angular.module('kairos.controllers', ['kairos.services'])
   };
 })
 
-.controller('AddCourseController', function($scope, $ionicPopup, siaCourseRetrieverFactory,
-  SiaApiUrl) {
+.controller('AddCourseController', function($scope, $ionicPopup, $q, siaCourseRetrieverFactory,
+  SiaApiUrl, stringUtils) {
   'use strict';
 
   $scope.universities = [
@@ -33,23 +33,45 @@ angular.module('kairos.controllers', ['kairos.services'])
   function updateMajors() {
     var university = $scope.data.university;
     if (university != null) {
-      university.retriever.getMajors().then(function(majors) {
+      return university.retriever.getMajors().then(function(majors) {
         $scope.majors = majors;
-      }, function() {
+        return majors;
+      }, function(reason) {
+        $scope.majors = null;
         $ionicPopup.alert({
           title: 'Error',
-          template: 'No pudimos obtener las carreras en este momento. Inténtelo de nuevo más tarde'
+          template: 'No pudimos obtener las carreras en este momento. Inténtalo de nuevo más tarde'
         });
+
+        return $q.reject(reason);
       });
     } else {
-      $scope.majors = null;
+      $scope.majors = [];
+      return $q.resolve($scope.majors);
     }
-    $scope.majors = university != null ? university.retriever.getMajors() : null;
   }
 
   $scope.$watch('data.university', function() {
     updateMajors();
   });
 
-  updateMajors();
+  $scope.queryMajors = function(query, isInitializing) {
+    var promise = $scope.majors == null ? updateMajors() : $q.resolve($scope.majors);
+
+    return promise.then(function(majors) {
+      return stringUtils.normalizedSearch(query, majors, function(major) {
+        return major.name;
+      });
+    });
+  };
+
+  $scope.queryUniversities = function(query, isInitializing) {
+    console.log('querying universities for ' + query);
+    var result = stringUtils.normalizedSearch(query, $scope.universities, function(university) {
+      return university.name;
+    });
+
+    console.log(result);
+    return result;
+  };
 });

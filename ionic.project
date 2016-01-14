@@ -8,5 +8,11 @@
   "watchPatterns": [
     "www/**/*",
     "!www/lib/**/*"
+  ],
+  "proxies": [
+    {
+      "path": "/external/siabogota",
+      "proxyUrl": "http://sia.bogota.unal.edu.co"
+    }
   ]
 }
