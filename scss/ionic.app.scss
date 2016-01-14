@@ -21,3 +21,11 @@ $ionicons-font-path: "../lib/ionic/fonts" !default;
 // Include all of Ionic
 @import "www/lib/ionic/scss/ionic";
 
+.item-select.full-width-select select {
+  direction: ltr;
+  position: initial;
+  text-align: left;
+  white-space: normal;
+  max-width: 100%;
+  width: 100%;
+}

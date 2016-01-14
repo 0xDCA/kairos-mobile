@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport"
       content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <meta http-equiv="Content-Security-Policy" content="default-src *; style-src * 'self'
+      'unsafe-inline'; script-src * 'self' 'unsafe-inline' 'unsafe-eval'; media-src *">
     <title></title>
 
 
@@ -19,6 +21,7 @@
     <!-- your app's js -->
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
+    <script src="js/services.js"></script>
   </head>
 
   <body ng-app="kairos">

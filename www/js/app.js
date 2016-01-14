@@ -1,4 +1,6 @@
-angular.module('kairos', ['ionic', 'kairos.controllers'])
+angular.module('kairos', ['ionic', 'kairos.controllers', 'kairos.services'])
+
+.constant('SiaApiUrl', 'http://sia.bogota.unal.edu.co')
 
 .run(function($ionicPlatform, $window) {
   'use strict';
@@ -32,7 +34,8 @@ angular.module('kairos', ['ionic', 'kairos.controllers'])
     url: '/start',
     views: {
       'menuContent': {
-        templateUrl: 'templates/start.html'
+        templateUrl: 'templates/start.html',
+        controller: 'StartController'
       }
     }
   })

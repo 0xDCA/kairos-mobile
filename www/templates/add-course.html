@@ -1,0 +1,31 @@
+<ion-modal-view ng-controller="AddCourseController">
+  <ion-header-bar>
+    <h1 class="title">Añadir un curso</h1>
+    <div class="buttons">
+      <button class="button button-clear" ng-click="dismiss()">
+        Cerrar
+      </button>
+    </div>
+  </ion-header-bar>
+  <ion-content class="padding">
+    <div class="list list-inset">
+      <label class="item item-select full-width-select">
+        <select ng-model="data.university"
+          ng-options="item.name group by item.category for item in universities |orderBy: item.name
+            track by item.id">
+        </select>
+      </label>
+      <label class="item item-select full-width-select">
+        <select ng-model="data.major"
+          ng-options="item.name for item in majors |orderBy: item.name track by item.id">
+        </select>
+      </label>
+    </div>
+    <div class="list list-inset">
+      <label class="item item-input">
+        <i class="icon ion-search placeholder-icon"></i>
+        <input type="text" placeholder="Nombre del curso">
+      </label>
+    </div>
+  </ion-content>
+</ion-modal-view>
