@@ -21,17 +21,25 @@ angular.module('kairos.controllers', ['kairos.services'])
       id: 1,
       name: 'Universidad Nacional de Colombia (Bogotá)',
       retriever: siaCourseRetrieverFactory(SiaApiUrl)
+    },
+    {
+      id: 2,
+      name: 'Universidad Nacional de Colombia (Bogotá)',
+      retriever: siaCourseRetrieverFactory(SiaApiUrl)
     }
   ];
   $scope.majors = [];
 
+  // Although we only allow one university, major and course, we use an array because
+  // ion-autocomplete requires it.
   $scope.data = {
-    university: $scope.universities[0],
-    major: null
+    selectedUniversities: [$scope.universities[0]],
+    selectedMajors: [],
+    selectedCourses: []
   };
 
   function updateMajors() {
-    var university = $scope.data.university;
+    var university = $scope.data.selectedUniversities[0];
     if (university != null) {
       return university.retriever.getMajors().then(function(majors) {
         $scope.majors = majors;
@@ -51,7 +59,7 @@ angular.module('kairos.controllers', ['kairos.services'])
     }
   }
 
-  $scope.$watch('data.university', function() {
+  $scope.$watch('data.selectedUniversities', function() {
     updateMajors();
   });
 
@@ -66,12 +74,20 @@ angular.module('kairos.controllers', ['kairos.services'])
   };
 
   $scope.queryUniversities = function(query, isInitializing) {
-    console.log('querying universities for ' + query);
-    var result = stringUtils.normalizedSearch(query, $scope.universities, function(university) {
+    return stringUtils.normalizedSearch(query, $scope.universities, function(university) {
       return university.name;
     });
+  };
 
-    console.log(result);
-    return result;
+  $scope.queryCourses = function(query, isInitializing) {
+    var university = $scope.data.selectedUniversities[0];
+    var major = $scope.data.selectedMajors[0];
+
+    if (university == null || major == null) {
+      return [];
+    }
+    console.log(major);
+    var retriever = university.retriever;
+    return retriever.getCoursesByName(query, major);
   };
 });

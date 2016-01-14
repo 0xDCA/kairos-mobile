@@ -147,7 +147,8 @@ angular.module('kairos.services', [])
 //  Course:
 //  {
 //    'id': string,
-//    'name': string
+//    'name': string,
+//    'credits': number
 //  }
 //
 //  CourseGroup:
@@ -175,7 +176,7 @@ angular.module('kairos.services', [])
 // - getGroupsByCourse: Retrieves the available groups for a given course (type Course). The result
 //    is promise that resolves to an array of CourseGroup.
 
-.factory('siaCourseRetrieverFactory', function($http, $q) {
+.factory('siaCourseRetrieverFactory', function($http, $q, MaxCourseResults) {
   'use strict';
 
   return function siaCourseRetrieverFactory(apiUrl) {
@@ -187,11 +188,13 @@ angular.module('kairos.services', [])
           var categoryTags = [
             {
               category: 'Pregrado',
-              tag: '<select id="valor_criterio_planestudio_PRE">'
+              tag: '<select id="valor_criterio_planestudio_PRE">',
+              internalCategory: 'PRE'
             },
             {
               category: 'Posgrado',
-              tag: '<select style="display:none" id="valor_criterio_planestudio_POS">'
+              tag: '<select style="display:none" id="valor_criterio_planestudio_POS">',
+              internalCategory: 'POS'
             }
           ];
           var endTag = '</select>';
@@ -221,7 +224,8 @@ angular.module('kairos.services', [])
               majors.push({
                 id: match[1],
                 name: match[3],
-                category: categoryTag.category
+                category: categoryTag.category,
+                internalCategory: categoryTag.internalCategory
               });
             }
           }
@@ -230,7 +234,22 @@ angular.module('kairos.services', [])
         });
       },
       getCoursesByName: function(name, major) {
-
+        return $http.post(apiUrl + '/buscador/JSON-RPC', {
+          'method': 'buscador.obtenerAsignaturas',
+          'params': [name, 'PRE', '', major.internalCategory, major.id, '', 1, MaxCourseResults]
+        }).then(function(httpData) {
+          if (httpData.data.error) {
+            return $q.reject(httpData.data.error);
+          }
+          console.log(httpData);
+          return httpData.data['result']['asignaturas']['list'].map(function(courseEntry) {
+            return {
+              credits: courseEntry['creditos'],
+              id: courseEntry['codigo'],
+              name: courseEntry['nombre']
+            };
+          });
+        });
       },
       getGroupsForCourse: function(course) {
 

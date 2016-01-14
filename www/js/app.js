@@ -3,6 +3,8 @@ angular.module('kairos', ['ionic', 'kairos.controllers', 'kairos.services', 'ion
 //.constant('SiaApiUrl', 'http://sia.bogota.unal.edu.co')
 .constant('SiaApiUrl', '/external/siabogota')
 
+.constant('MaxCourseResults', 50)
+
 .run(function($ionicPlatform, $window) {
   'use strict';
 

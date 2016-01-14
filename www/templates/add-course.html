@@ -10,25 +10,30 @@
   <ion-content class="padding">
     <div class="list list-inset">
       <label class="item item-input">
+        <i class="icon ion-search placeholder-icon"></i>
         <input ion-autocomplete type="text" readonly="readonly" class="ion-autocomplete"
-          autocomplete="off" max-selected-items="1" ng-model="data.university"
+          autocomplete="off" max-selected-items="1" ng-model="data.selectedUniversities"
           item-view-value-key="name" items-method="queryUniversities(query, isInitializing)"
           placeholder="Escribe una unversidad" cancel-label="Cancelar"
           select-items-label="Selecciona un elemento" selected-items-label="Mi selección: ">
         </select>
       </label>
       <label class="item item-input">
+        <i class="icon ion-search placeholder-icon"></i>
         <input ion-autocomplete type="text" readonly="readonly" class="ion-autocomplete"
-          autocomplete="off" max-selected-items="1" ng-model="data.major"
+          autocomplete="off" max-selected-items="1" ng-model="data.selectedMajors"
           item-view-value-key="name" items-method="queryMajors(query, isInitializing)"
           placeholder="Escribe una carrera" cancel-label="Cancelar"
           select-items-label="Selecciona un elemento" selected-items-label="Mi selección: ">
       </label>
-    </div>
-    <div class="list list-inset">
       <label class="item item-input">
         <i class="icon ion-search placeholder-icon"></i>
-        <input type="text" placeholder="Nombre del curso">
+        <input ion-autocomplete type="text" readonly="readonly" class="ion-autocomplete"
+          autocomplete="off" max-selected-items="1" ng-model="data.selectedCourses"
+          item-view-value-key="name" items-method="queryCourses(query, isInitializing)"
+          placeholder="Escribe una materia" cancel-label="Cancelar"
+          select-items-label="Selecciona un elemento" selected-items-label="Mi selección: "
+          ng-model-options="{debounce:300}">
       </label>
     </div>
   </ion-content>
