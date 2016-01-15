@@ -40,28 +40,61 @@ angular.module('kairos.controllers', ['kairos.services'])
 
   function updateMajors() {
     var university = $scope.data.selectedUniversities[0];
-    if (university != null) {
-      return university.retriever.getMajors().then(function(majors) {
-        $scope.majors = majors;
-        return majors;
-      }, function(reason) {
-        $scope.majors = null;
-        $ionicPopup.alert({
-          title: 'Error',
-          template: 'No pudimos obtener las carreras en este momento. Inténtalo de nuevo más tarde'
-        });
-
-        return $q.reject(reason);
-      });
-    } else {
-      $scope.majors = [];
+    if (university == null) {
+      $scope.majors = null;
       return $q.resolve($scope.majors);
     }
+
+    return university.retriever.getMajors().then(function(majors) {
+      $scope.majors = majors;
+      return majors;
+    }, function(reason) {
+      $scope.majors = null;
+      $ionicPopup.alert({
+        title: 'Error',
+        template: 'No pudimos obtener las carreras en este momento. Inténtalo de nuevo más tarde'
+      });
+
+      return $q.reject(reason);
+    });
   }
 
-  $scope.$watch('data.selectedUniversities', function() {
+  $scope.$watchCollection('data.selectedUniversities', function() {
     updateMajors();
+    updateGroups();
   });
+
+  $scope.$watchCollection('data.selectedMajors', function() {
+    updateGroups();
+  });
+
+  $scope.$watchCollection('data.selectedCourses', function() {
+    updateGroups();
+  });
+
+  function updateGroups() {
+    var university = $scope.data.selectedUniversities[0];
+    var major = $scope.data.selectedMajors[0];
+    var course = $scope.data.selectedCourses[0];
+
+    if (university == null || major == null || course == null) {
+      $scope.groups = null;
+      return $q.resolve($scope.groups);
+    }
+
+    return university.retriever.getGroupsByCourse(course, major).then(function(groups) {
+      $scope.groups = groups;
+      return groups;
+    }, function(reason) {
+      $scope.groups = null;
+      $ionicPopup.alert({
+        title: 'Error',
+        template: 'No pudimos obtener los grupos en este momento. Inténtalo de nuevo más tarde'
+      });
+
+      return $q.reject(reason);
+    });
+  }
 
   $scope.queryMajors = function(query, isInitializing) {
     var promise = $scope.majors == null ? updateMajors() : $q.resolve($scope.majors);
@@ -96,5 +129,17 @@ angular.module('kairos.controllers', ['kairos.services'])
 
       return $q.reject(reason);
     });
+  };
+
+  $scope.dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+
+  $scope.hasMoreScheduleDays = function(group, day) {
+    for (var i = day + 1; i < 7; ++i) {
+      if (group.schedules[i] != null && group.schedules[i].length > 0) {
+        return true;
+      }
+    }
+
+    return false;
   };
 });

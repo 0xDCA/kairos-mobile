@@ -9738,3 +9738,11 @@ a.button {
   white-space: normal;
   max-width: 100%;
   width: 100%; }
+
+.group-item {
+  white-space: normal; }
+  .group-item .group-name {
+    font-weight: bold; }
+  .group-item .available-places {
+    margin-top: 5px;
+    text-align: center; }

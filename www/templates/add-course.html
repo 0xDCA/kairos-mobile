@@ -36,5 +36,30 @@
           ng-model-options="{debounce:300}">
       </label>
     </div>
+
+    <ion-list>
+      <ion-item ng-repeat="group in groups" class="group-item">
+        <div class="group-name">{{group.id}} - {{group.teacher || 'Sin profesor asignado'}}</div>
+        <div>
+          <span ng-repeat="day in dayNames" ng-if="group.schedules[$index]"
+            ng-init="daySchedules = group.schedules[$index]; dayIndex = $index">
+            <span class="day-name">{{day}}: </span>
+            <span ng-repeat="schedule in daySchedules">
+              <span class="group-time">{{schedule.startTime | minutesToDate | date:'h:mma'}}</span> -
+              <span class="group-time">{{schedule.endTime | minutesToDate | date:'h:mma'}}</span>
+              <span class="group-place" ng-if="schedule.place">
+                ({{schedule.place}})
+              </span><span ng-if="!$last">, </span>
+            </span><span ng-if="hasMoreScheduleDays(group, dayIndex)">, </span>
+          </span>
+        </div>
+        <div ng-if="group.notes">{{group.notes}}</div>
+        <div class="available-places">
+          {{group.availablePlaces}} disponible(s) de {{group.totalPlaces}}
+          <progress max="{{group.totalPlaces}}"
+            value="{{group.totalPlaces - group.availablePlaces}}"></progress>
+        </div>
+      </ion-item>
+    </ion-list>
   </ion-content>
 </ion-modal-view>

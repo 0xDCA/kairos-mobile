@@ -29,3 +29,16 @@ $ionicons-font-path: "../lib/ionic/fonts" !default;
   max-width: 100%;
   width: 100%;
 }
+
+.group-item {
+  white-space: normal;
+
+  .group-name {
+    font-weight: bold;
+  }
+
+  .available-places {
+    margin-top: 5px;
+    text-align: center;
+  }
+}

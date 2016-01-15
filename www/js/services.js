@@ -134,6 +134,17 @@ angular.module('kairos.services', [])
   return stringUtils;
 })
 
+.filter('minutesToDate', function() {
+  'use strict';
+
+  return function(minutes) {
+    var result = new Date();
+    result.setHours(0);
+    result.setMinutes(minutes);
+    return result;
+  };
+})
+
 // Course retrievers START
 //
 // Definitions:
@@ -157,12 +168,13 @@ angular.module('kairos.services', [])
 //    'teacher': string,
 //    'availablePlaces': number,
 //    'totalPlaces': number,
+//    'notes': string,
 //    'schedules': {
 //      day: [
 //        {
-//          startTime: number (minutes),
-//          endTime: number (minutes),
-//          notes: string
+//          'startTime': number (minutes),
+//          'endTime': number (minutes),
+//          'place': string
 //        }
 //      ] (where day is a number between 0 and 6)
 //    }
@@ -173,10 +185,10 @@ angular.module('kairos.services', [])
 // - getCoursesByName(name, major): Retrieves the courses that contain the given name (string). The
 //    optional parameter major (Major) can be used to further filter the results. The result is a
 //    promise that resolves to an array of Course.
-// - getGroupsByCourse: Retrieves the available groups for a given course (type Course). The result
-//    is promise that resolves to an array of CourseGroup.
+// - getGroupsByCourse(course, major): Retrieves the available groups for a given course (type
+//    Course) and a given major. The result is a promise that resolves to an array of CourseGroup.
 
-.factory('siaCourseRetrieverFactory', function($http, $q, MaxCourseResults) {
+.factory('siaCourseRetrieverFactory', function($http, $q, stringUtils, MaxCourseResults) {
   'use strict';
 
   return function siaCourseRetrieverFactory(apiUrl) {
@@ -234,14 +246,16 @@ angular.module('kairos.services', [])
         });
       },
       getCoursesByName: function(name, major) {
+        var normalizedQuery = stringUtils.normalizeString(name);
         return $http.post(apiUrl + '/buscador/JSON-RPC', {
           'method': 'buscador.obtenerAsignaturas',
-          'params': [name, 'PRE', '', major.internalCategory, major.id, '', 1, MaxCourseResults]
+          'params': [normalizedQuery, 'PRE', '', major.internalCategory, major.id, '', 1,
+            MaxCourseResults]
         }).then(function(httpData) {
           if (httpData.data.error) {
             return $q.reject(httpData.data.error);
           }
-          console.log(httpData);
+
           return httpData.data['result']['asignaturas']['list'].map(function(courseEntry) {
             return {
               credits: courseEntry['creditos'],
@@ -251,8 +265,116 @@ angular.module('kairos.services', [])
           });
         });
       },
-      getGroupsForCourse: function(course) {
+      getGroupsByCourse: function(course, major) {
+        return $http.post(apiUrl + '/buscador/JSON-RPC', {
+          'method': 'buscador.obtenerGruposAsignaturas',
+          'params': [course.id, '']
+        }).then(function(httpData) {
+          if (httpData.data.error) {
+            return $q.reject(httpData.data.error);
+          }
 
+          var result = httpData.data['result']['list'];
+          if (major != null) {
+            // If we have a major, let's filter manually
+            result = result.filter(function(groupEntry) {
+              // Check major restrictions
+              var restrictions = groupEntry['planlimitacion']['list'];
+              var hasInclusionRestrictions = false;
+              var hasExclusionRestrictions = false;
+              for (var i = 0; i < restrictions.length; ++i) {
+                var restriction = restrictions[i];
+                var restrictionMajor = restriction['plan'];
+                var majorAllowed = restriction['tipo_limitacion'] === 'A';
+
+                hasInclusionRestrictions += majorAllowed ? 1 : 0;
+                hasExclusionRestrictions += !majorAllowed ? 1 : 0;
+
+                // Handle cases where the major is explicitly excluded or explicitly included.
+                if (restrictionMajor === major.id) {
+                  return majorAllowed;
+                }
+              }
+
+              // If the group has exclusion restrictions, assume the major is allowed, as it was not
+              // excluded.
+              if (hasExclusionRestrictions) {
+                return true;
+              }
+
+              // If the groups has inclusion restrictions, assume the major is not allowed, because
+              // it was not explicitly included.
+              if (hasInclusionRestrictions) {
+                return false;
+              }
+
+              // Otherwise, there are no restrictions, so we assume the major is allowed.
+              return true;
+            });
+          }
+
+          return result.map(function(groupEntry) {
+            var schedules = {};
+            var scheduleKeys = [
+              {schedule: 'horario_lunes', place: 'aula_lunes'},
+              {schedule: 'horario_martes', place: 'aula_martes'},
+              {schedule: 'horario_miercoles', place: 'aula_miercoles'},
+              {schedule: 'horario_jueves', place: 'aula_jueves'},
+              {schedule: 'horario_viernes', place: 'aula_viernes'},
+              {schedule: 'horario_sabado', place: 'aula_sabado'},
+              {schedule: 'horario_domingo', place: 'aula_domingo'}
+            ];
+
+            var isUnreliable = false;
+            for (var i = 0; i < 7 /* days of the week */; ++i) {
+              var scheduleEntry = groupEntry[scheduleKeys[i].schedule];
+              var placeEntry = groupEntry[scheduleKeys[i].place];
+
+              if (scheduleEntry === '--') {
+                continue;
+              }
+
+              var daySchedulesEntry = scheduleEntry.split(' ');
+              var placesEntry = placeEntry === '--' ? [] : placeEntry.split(' ');
+
+              var zippedPlaces = [];
+              var j;
+              for (j = 0; j < placesEntry.length; ++j) {
+                // Generate a new item only if the string length is > 2 or its the first element.
+                if (j === 0 || placesEntry[j].length >= 2) {
+                  zippedPlaces.push(placesEntry[j]);
+                } else {
+                  zippedPlaces[zippedPlaces.length - 1] += ' ' + placesEntry[j];
+                }
+              }
+
+              isUnreliable = isUnreliable || zippedPlaces.length > daySchedulesEntry.length;
+
+              var daySchedules = [];
+              for (j = 0; j < daySchedulesEntry.length; ++j) {
+                var times = daySchedulesEntry[j].split('-');
+                var schedule = {
+                  startTime: parseInt(times[0], 10) * 60,
+                  endTime: parseInt(times[1], 10) * 60,
+                  place: (zippedPlaces[j] === 'null' ? null : zippedPlaces[j]) || null
+                };
+
+                daySchedules.push(schedule);
+              }
+
+              schedules[i] = daySchedules;
+            }
+
+            return {
+              'id': groupEntry['codigo'],
+              'teacher': groupEntry['nombredocente'].trim() || null,
+              'availablePlaces': groupEntry['cuposdisponibles'],
+              'totalPlaces': groupEntry['cupostotal'],
+              'notes': isUnreliable ? 'El aula para este horario puede tener errores' : null,
+              'schedules': schedules
+            };
+          });
+        });
       }
     };
   };
