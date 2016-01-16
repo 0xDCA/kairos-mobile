@@ -240,7 +240,7 @@ angular.module('kairos.services', [])
             var startB = scheduleB.startTime;
             var endB = scheduleB.endTime;
 
-            if (endA >= startB && startA < endB) {
+            if (endA > startB && startA < endB) {
               isConflict = true;
               result.push(groupData);
               break;
