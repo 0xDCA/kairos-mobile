@@ -348,20 +348,34 @@ angular.module('kairos.controllers', ['kairos.services'])
         return true;
       },
       destructiveButtonClicked: function() {
-        scheduleManager.removeSchedule(scheduleData.id);
+        // Prevent HTML injection by creating a new scope instead of adding the name to the template
+        var newScope = $rootScope.$new();
+        newScope.name = scheduleData.name || 'Horario sin nombre';
 
-        var newActive = null;
-        angular.forEach(scheduleManager.getSavedSchedules(), function(value) {
-          if (newActive == null ||
-            (new Date(value.lastModified)).getTime() >
-              (new Date(newActive.lastModified)).getTime()) {
-            newActive = value;
+        $ionicPopup.confirm({
+          title: 'Eliminar horario',
+          template: '¿Realmente desea eliminar {{name}}? Esta acción es irreversible.',
+          scope: newScope
+        }).then(function(confirmation) {
+          if (!confirmation) {
+            return;
           }
-        });
 
-        scheduleManager.setActiveSchedule(newActive != null ?
-          scheduleManager.loadSchedule(newActive.id) : scheduleManager.createSchedule());
-        updateSavedSchedules();
+          scheduleManager.removeSchedule(scheduleData.id);
+
+          var newActive = null;
+          angular.forEach(scheduleManager.getSavedSchedules(), function(value) {
+            if (newActive == null ||
+              (new Date(value.lastModified)).getTime() >
+                (new Date(newActive.lastModified)).getTime()) {
+              newActive = value;
+            }
+          });
+
+          scheduleManager.setActiveSchedule(newActive != null ?
+            scheduleManager.loadSchedule(newActive.id) : scheduleManager.createSchedule());
+          updateSavedSchedules();
+        });
         return true;
       }
     });
