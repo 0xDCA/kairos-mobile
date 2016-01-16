@@ -154,6 +154,111 @@ angular.module('kairos.services', [])
     }
   };
 })
+
+.factory('scheduleManager', function() {
+  'use strict';
+
+  function Schedule() {
+    this._data = [];
+    this.name = '';
+  }
+
+  Schedule.prototype.getGroupDataByTimeAndDay = function(timeInMinutes, day) {
+    for (var i = 0; i < this._data.length; ++i) {
+      var groupData = this._data[i];
+      var group = groupData.group;
+
+      for (var j = 0; j < group.schedules; ++j) {
+        var schedule = group.schedules[j];
+        if (schedule.day === day && schedule.startTime <= timeInMinutes &&
+          timeInMinutes < schedule.endTime) {
+          return groupData;
+        }
+      }
+    }
+  };
+
+  Schedule.prototype.getAllGroupData = function() {
+    return angular.copy(this._data);
+  };
+
+  Schedule.prototype.addGroupData = function(groupData) {
+    if (groupData == null) {
+      throw new Error('Cannot add a null group');
+    }
+
+    if (this.getConflictsWithGroupData(groupData).length > 0) {
+      throw new Error('The groupData is in conflict with the existing data');
+    }
+    this._data.push(groupData);
+  };
+
+  Schedule.prototype.removeGroupData = function(groupData) {
+    if (groupData == null) {
+      throw new Error('Cannot remove a null group');
+    }
+
+    for (var i = 0; i < this._data.length; ++i) {
+      var data = this._data[i];
+      if (data.group.id === groupData.group.id && data.course.id === groupData.course.id &&
+        data.university.id === groupData.university.id) {
+        this._data.splice(i, 1);
+      }
+    }
+  };
+
+  Schedule.prototype.getConflictsWithGroupData = function(newGroupData) {
+    var result = [];
+    for (var i = 0; i < this._data.length; ++i) {
+      var groupData = this._data[i];
+      var group = groupData.group;
+
+      for (var j = 0; j < group.schedules; ++j) {
+        var scheduleA = group.schedules[j];
+        var startA = scheduleA.startTime;
+        var endA = scheduleA.endTime;
+
+        var isConflict = false;
+
+        for (var k = 0; k < newGroupData.group.schedules.length; ++k) {
+          var scheduleB = newGroupData.group.schedules[k];
+          var startB = scheduleB.startTime;
+          var endB = scheduleB.endTime;
+
+          if ((startB <= startA && startA < endB) || (startB <= endA && endA < endB) ||
+              (startA <= startB && startB < endA)) {
+            isConflict = true;
+            result.push(groupData);
+            break;
+          }
+        }
+
+        if (isConflict) {
+          break;
+        }
+      }
+    }
+
+    return result;
+  };
+
+  Schedule.prototype.save = function() {
+
+  };
+
+  return {
+    createSchedule: function() {
+      return new Schedule();
+    },
+    loadSchedule: function(id) {
+      return null;
+    },
+    getSavedSchedules: function() {
+      return [];
+    }
+  };
+})
+
 .filter('minutesToDate', function() {
   'use strict';
 
@@ -192,8 +297,8 @@ angular.module('kairos.services', [])
 //    'schedules': {
 //      day: [
 //        {
-//          'startTime': number (minutes),
-//          'endTime': number (minutes),
+//          'startTime': number (minutes, inclusive),
+//          'endTime': number (minutes, exclusive),
 //          'place': string
 //        }
 //      ] (where day is a number between 0 and 6)
