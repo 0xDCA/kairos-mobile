@@ -7,13 +7,14 @@ angular.module('kairos.services', [])
   'use strict';
 
   return {
-    fromTemplateUrl: function(templateUrl, options) {
+    fromTemplateUrl: function(templateUrl, options, params) {
       var deferred = $q.defer();
 
       var newOptions = angular.extend({}, options);
       newOptions.scope = (newOptions.scope || $rootScope).$new();
 
       var scope = newOptions.scope;
+      scope.params = params;
       var modal;
 
       $ionicModal.fromTemplateUrl(templateUrl, newOptions).then(function(_modal_) {
@@ -168,9 +169,13 @@ angular.module('kairos.services', [])
       var groupData = this._data[i];
       var group = groupData.group;
 
-      for (var j = 0; j < group.schedules; ++j) {
-        var schedule = group.schedules[j];
-        if (schedule.day === day && schedule.startTime <= timeInMinutes &&
+      if (group.schedules[day] == null) {
+        continue;
+      }
+
+      for (var j = 0; j < group.schedules[day].length; ++j) {
+        var schedule = group.schedules[day][j];
+        if (schedule.startTime <= timeInMinutes &&
           timeInMinutes < schedule.endTime) {
           return groupData;
         }
@@ -190,6 +195,7 @@ angular.module('kairos.services', [])
     if (this.getConflictsWithGroupData(groupData).length > 0) {
       throw new Error('The groupData is in conflict with the existing data');
     }
+
     this._data.push(groupData);
   };
 
@@ -213,28 +219,29 @@ angular.module('kairos.services', [])
       var groupData = this._data[i];
       var group = groupData.group;
 
-      for (var j = 0; j < group.schedules; ++j) {
-        var scheduleA = group.schedules[j];
-        var startA = scheduleA.startTime;
-        var endA = scheduleA.endTime;
+      var isConflict = false;
 
-        var isConflict = false;
-
-        for (var k = 0; k < newGroupData.group.schedules.length; ++k) {
-          var scheduleB = newGroupData.group.schedules[k];
-          var startB = scheduleB.startTime;
-          var endB = scheduleB.endTime;
-
-          if ((startB <= startA && startA < endB) || (startB <= endA && endA < endB) ||
-              (startA <= startB && startB < endA)) {
-            isConflict = true;
-            result.push(groupData);
-            break;
-          }
+      for (var day = 0; day < 7 && !isConflict; ++day) {
+        if (group.schedules[day] == null || newGroupData.group.schedules[day] == null) {
+          continue;
         }
 
-        if (isConflict) {
-          break;
+        for (var j = 0; j < group.schedules[day].length && !isConflict; ++j) {
+          var scheduleA = group.schedules[day][j];
+          var startA = scheduleA.startTime;
+          var endA = scheduleA.endTime;
+
+          for (var k = 0; k < newGroupData.group.schedules[day].length; ++k) {
+            var scheduleB = newGroupData.group.schedules[day][k];
+            var startB = scheduleB.startTime;
+            var endB = scheduleB.endTime;
+
+            if (endA >= startB && startA < endB) {
+              isConflict = true;
+              result.push(groupData);
+              break;
+            }
+          }
         }
       }
     }
