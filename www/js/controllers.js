@@ -5,12 +5,8 @@ angular.module('kairos.controllers', ['kairos.services'])
 })
 
 .controller('StartController', function($scope, dialogService, FirstScheduleTime, LastScheduleTime,
-  ScheduleTimeStep) {
+  ScheduleTimeStep, scheduleManager, $rootScope) {
   'use strict';
-
-  $scope.addCourse = function() {
-    dialogService.fromTemplateUrl('templates/add-course.html');
-  };
 
   $scope.dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -21,6 +17,17 @@ angular.module('kairos.controllers', ['kairos.services'])
       endTime: i + ScheduleTimeStep
     });
   }
+
+  $scope.schedule = scheduleManager.createSchedule();
+
+  $scope.addCourse = function() {
+    dialogService.fromTemplateUrl('templates/add-course.html', null, {
+      schedule: $scope.schedule
+    }).then(function(groupData) {
+      $scope.schedule.addGroupData(groupData);
+      $scope.schedule.save();
+    });
+  };
 })
 
 .controller('AddCourseController', function($scope, $ionicPopup, $q, stringUtils,
@@ -29,6 +36,7 @@ angular.module('kairos.controllers', ['kairos.services'])
 
   $scope.universities = universityRepository.getUniversities();
   $scope.majors = [];
+  $scope.groupConflicts = {};
 
   // Although we only allow one university, major and course, we use an array because
   // ion-autocomplete requires it.
@@ -59,19 +67,6 @@ angular.module('kairos.controllers', ['kairos.services'])
     });
   }
 
-  $scope.$watchCollection('data.selectedUniversities', function() {
-    updateMajors();
-    updateGroups();
-  });
-
-  $scope.$watchCollection('data.selectedMajors', function() {
-    updateGroups();
-  });
-
-  $scope.$watchCollection('data.selectedCourses', function() {
-    updateGroups();
-  });
-
   function updateGroups() {
     var university = $scope.data.selectedUniversities[0];
     var major = $scope.data.selectedMajors[0];
@@ -95,6 +90,46 @@ angular.module('kairos.controllers', ['kairos.services'])
       return $q.reject(reason);
     });
   }
+
+  function getGroupData(group) {
+    var course = $scope.data.selectedCourses[0];
+    var major = $scope.data.selectedMajors[0];
+    var university = $scope.data.selectedUniversities[0];
+    return {
+      group: group,
+      course: course,
+      major: major,
+      university: university
+    };
+  }
+
+  function updateGroupConflicts() {
+    $scope.groupConflicts = {};
+    var groups = $scope.groups || [];
+    var schedule = $scope.params.schedule;
+
+    for (var i = 0; i < groups.length; ++i) {
+      $scope.groupConflicts[groups[i].id] =
+        schedule.getConflictsWithGroupData(getGroupData(groups[i]));
+    }
+  }
+
+  $scope.$watchCollection('data.selectedUniversities', function() {
+    updateMajors();
+    updateGroups();
+  });
+
+  $scope.$watchCollection('data.selectedMajors', function() {
+    updateGroups();
+  });
+
+  $scope.$watchCollection('data.selectedCourses', function() {
+    updateGroups();
+  });
+
+  $scope.$watch('groups', function() {
+    updateGroupConflicts();
+  });
 
   $scope.queryMajors = function(query, isInitializing) {
     var promise = $scope.majors == null ? updateMajors() : $q.resolve($scope.majors);
@@ -144,14 +179,10 @@ angular.module('kairos.controllers', ['kairos.services'])
   };
 
   $scope.selectGroup = function(group) {
-    var course = $scope.data.selectedCourses[0];
-    var major = $scope.data.selectedMajors[0];
-    var university = $scope.data.selectedUniversities[0];
-    $scope.close({
-      group: group,
-      course: course,
-      major: major,
-      university: university
-    });
+    if ($scope.groupConflicts[group.id].length) {
+      return;
+    }
+
+    $scope.close(getGroupData(group));
   };
 });

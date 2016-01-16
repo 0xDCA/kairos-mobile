@@ -38,8 +38,15 @@
     </div>
 
     <ion-list>
-      <ion-item ng-repeat="group in groups" class="group-item">
+      <ion-item ng-repeat="group in groups" class="group-item" ng-click="selectGroup(group)"
+        ng-class="{'disabled': groupConflicts[group.id].length}">
         <div class="group-name">{{group.id}} - {{group.teacher || 'Sin profesor asignado'}}</div>
+        <div class="group-conflict" ng-if="groupConflicts[group.id].length">Se cruza con
+          <span ng-repeat="conflict in groupConflicts[group.id]">
+            {{conflict.course.name}}
+            <span ng-if="!$last">, </span>
+          </span>
+        </div>
         <div>
           <span ng-repeat="day in dayNames" ng-if="group.schedules[$index]"
             ng-init="daySchedules = group.schedules[$index]; dayIndex = $index">

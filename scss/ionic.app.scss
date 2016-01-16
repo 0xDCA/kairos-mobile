@@ -41,4 +41,22 @@ $ionicons-font-path: "../lib/ionic/fonts" !default;
     margin-top: 5px;
     text-align: center;
   }
+
+  .group-conflict {
+    color: red;
+  }
+}
+
+.schedule-table-container {
+  overflow-x: scroll;
+}
+
+.schedule-table {
+  th, td {
+    padding: 3px;
+  }
+}
+
+.item.disabled {
+  color: silver;
 }
