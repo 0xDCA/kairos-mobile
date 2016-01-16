@@ -1,5 +1,21 @@
 <ion-view view-title="Mis horarios">
   <ion-content class="padding">
     <h1>Mis horarios</h1>
+
+    <ion-list can-swipe="true">
+      <ion-radio ng-repeat="item in savedSchedules | orderBy:'createdAt':true"
+        ng-model="data.activeScheduleId" ng-value="item.id" on-hold="showScheduleMenu(item)">
+        {{item.name || 'Horario sin nombre'}}
+        <div class="">
+          Creado: {{item.createdAt | date:'medium'}}
+        </div>
+      </ion-radio>
+    </ion-list>
+
+    <div class="text-center padding">
+      <button class="button icon-left ion-plus-circled button-balanced" ng-click="createSchedule()">
+        Crear horario
+      </button>
+    </div>
   </ion-content>
 </ion-view>

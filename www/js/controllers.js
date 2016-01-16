@@ -5,7 +5,7 @@ angular.module('kairos.controllers', ['kairos.services'])
 })
 
 .controller('StartController', function($scope, dialogService, FirstScheduleTime, LastScheduleTime,
-  ScheduleTimeStep, scheduleManager, $rootScope) {
+  ScheduleTimeStep, scheduleManager, $rootScope, $ionicActionSheet) {
   'use strict';
 
   $scope.dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -18,15 +18,41 @@ angular.module('kairos.controllers', ['kairos.services'])
     });
   }
 
-  $scope.schedule = scheduleManager.createSchedule();
+  function initSchedule() {
+    $scope.schedule = scheduleManager.getActiveSchedule();
+  }
 
-  $scope.addCourse = function() {
+  initSchedule();
+
+  $scope.$watch(scheduleManager.getActiveSchedule, function() {
+    initSchedule();
+  });
+
+  $scope.addCourse = function(toReplace) {
+    if (toReplace != null) {
+      // Remove the group first to avoid conflicts with other groups. It's important not to persist
+      // the schedule in case of errors.
+      $scope.schedule.removeGroupData(toReplace);
+    }
     dialogService.fromTemplateUrl('templates/add-course.html', null, {
-      schedule: $scope.schedule
+      schedule: $scope.schedule,
+      existingGroupData: toReplace
     }).then(function(groupData) {
       $scope.schedule.addGroupData(groupData);
       $scope.schedule.save();
+    }).catch(function() {
+      // If the user dismissed the dialog, let's re-add the old group.
+      $scope.schedule.addGroupData(toReplace);
     });
+  };
+
+  $scope.removeGroupData = function(groupData) {
+    if (groupData == null) {
+      return;
+    }
+
+    $scope.schedule.removeGroupData(groupData);
+    $scope.schedule.save();
   };
 
   $scope.getGroupData = function(day, timeBlock) {
@@ -62,6 +88,29 @@ angular.module('kairos.controllers', ['kairos.services'])
 
     var schedule = groupSchedule.groupData.group.schedules[day][groupSchedule.scheduleIndex];
     return Math.ceil((schedule.endTime - schedule.startTime) / ScheduleTimeStep);
+  };
+
+  $scope.showGroupMenu = function(groupData) {
+    if (groupData == null) {
+      return;
+    }
+
+    $ionicActionSheet.show({
+      buttons: [
+        {text: '<i class="icon ion-edit"> </i> Editar'}
+      ],
+      destructiveText: '<i class="icon ion-trash-b"> </i> Eliminar',
+      titleText: groupData.course.name,
+      cancelText: 'Cancelar',
+      buttonClicked: function(index) {
+        $scope.addCourse(groupData);
+        return true;
+      },
+      destructiveButtonClicked: function() {
+        $scope.removeGroupData(groupData);
+        return true;
+      }
+    });
   };
 })
 
@@ -219,5 +268,102 @@ angular.module('kairos.controllers', ['kairos.services'])
     }
 
     $scope.close(getGroupData(group));
+  };
+})
+
+.controller('SavedSchedulesController', function($scope, scheduleManager, $ionicActionSheet,
+  $ionicPopup, $rootScope) {
+  'use strict';
+
+  $scope.data = {
+    activeScheduleId: null
+  };
+
+  function updateActiveSchedule() {
+    var activeSchedule = scheduleManager.getActiveSchedule();
+    $scope.data.activeScheduleId = activeSchedule == null ? null : activeSchedule.id;
+  }
+
+  $scope.$watch(scheduleManager.getActiveSchedule, function() {
+    updateActiveSchedule();
+  });
+
+  $scope.$watch(function() {
+    return $scope.data.activeScheduleId;
+  }, function() {
+    scheduleManager.setActiveSchedule(scheduleManager.loadSchedule($scope.data.activeScheduleId));
+  });
+
+  $scope.savedSchedules = [];
+
+  function updateSavedSchedules() {
+    $scope.savedSchedules = scheduleManager.getSavedSchedules();
+  }
+
+  $scope.$on('$ionicView.enter', function() {
+    updateSavedSchedules();
+  });
+
+  $scope.createSchedule = function() {
+    var schedule = scheduleManager.createSchedule();
+    schedule.save();
+    scheduleManager.setActiveSchedule(schedule);
+    updateSavedSchedules();
+  };
+
+  $scope.showScheduleMenu = function(scheduleData) {
+    if (scheduleData == null) {
+      return;
+    }
+
+    $ionicActionSheet.show({
+      buttons: [
+        {text: '<i class="icon ion-edit"> </i> Cambiar nombre'}
+      ],
+      destructiveText: '<i class="icon ion-trash-b"> </i> Eliminar',
+      titleText: scheduleData.name || 'Horario sin nombre',
+      buttonClicked: function(index) {
+        var newScope = $rootScope.$new();
+        newScope.data = {
+          name: scheduleData.name || ''
+        };
+        $ionicPopup.show({
+          template: '<input type="text" ng-model="data.name">',
+          scope: newScope,
+          title: 'Introduzca el nombre para el horario',
+          buttons: [
+            {text: 'Cancelar'},
+            {
+              text: 'Guardar',
+              type: 'button-positive',
+              onTap: function(e) {
+                var schedule = scheduleManager.loadSchedule(scheduleData.id);
+                schedule.name = newScope.data.name;
+                schedule.save();
+                updateSavedSchedules();
+              }
+            }
+          ]
+        });
+        return true;
+      },
+      destructiveButtonClicked: function() {
+        scheduleManager.removeSchedule(scheduleData.id);
+
+        var newActive = null;
+        angular.forEach(scheduleManager.getSavedSchedules(), function(value) {
+          if (newActive == null ||
+            (new Date(value.lastModified)).getTime() >
+              (new Date(newActive.lastModified)).getTime()) {
+            newActive = value;
+          }
+        });
+
+        scheduleManager.setActiveSchedule(newActive != null ?
+          scheduleManager.loadSchedule(newActive.id) : scheduleManager.createSchedule());
+        updateSavedSchedules();
+        return true;
+      }
+    });
   };
 });

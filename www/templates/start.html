@@ -1,6 +1,6 @@
 <ion-view view-title="Kairos UN">
   <ion-content class="padding">
-    <h1>Horario actual</h1>
+    <h1>{{schedule.name || 'Horario sin nombre'}}</h1>
     <div>
       <div class="schedule-table-container">
         <table class="schedule-table">
@@ -16,7 +16,8 @@
             </th>
             <td ng-repeat="dayIndex in filteredDayIndexes(timeBlock)"
               rowspan="{{getNumberOfBlocks(dayIndex, timeBlock)}}">
-              <div ng-if="getGroupData(dayIndex, timeBlock) != null" class="schedule-entry">
+              <div ng-if="getGroupData(dayIndex, timeBlock) != null" class="schedule-entry"
+                ng-click="showGroupMenu(getGroupData(dayIndex, timeBlock))">
                 <div class="course">{{getGroupData(dayIndex, timeBlock).course.id}} -
                   {{getGroupData(dayIndex, timeBlock).course.name}}</div>
                 <div class="group">{{getGroupData(dayIndex, timeBlock).group.id}} -

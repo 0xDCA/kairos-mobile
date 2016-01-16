@@ -50,7 +50,8 @@ angular.module('kairos', ['ionic', 'kairos.controllers', 'kairos.services', 'ion
     url: '/saved-schedules',
     views: {
       'menuContent': {
-        templateUrl: 'templates/saved-schedules.html'
+        templateUrl: 'templates/saved-schedules.html',
+        controller: 'SavedSchedulesController'
       }
     }
   });

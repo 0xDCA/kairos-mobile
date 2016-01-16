@@ -156,16 +156,29 @@ angular.module('kairos.services', [])
   };
 })
 
-.factory('scheduleManager', function() {
+.factory('localStorageWrapper', function($window) {
   'use strict';
 
-  function Schedule() {
+  return {
+    getItem: function(key) {
+      return angular.fromJson($window.localStorage.getItem(key));
+    },
+    setItem: function(key, value) {
+      $window.localStorage.setItem(key, angular.toJson(value));
+    }
+  };
+})
+
+.factory('scheduleManager', function(localStorageWrapper) {
+  'use strict';
+
+  function Schedule(id) {
     this._data = [];
     this.name = '';
+    this.id = id;
   }
 
   Schedule.prototype.getGroupScheduleByTimeAndDay = function(timeInMinutes, day) {
-    //console.log('getGroupDataByTimeAndDay(' + timeInMinutes + ', ' + day + ')');
     for (var i = 0; i < this._data.length; ++i) {
       var groupData = this._data[i];
       var group = groupData.group;
@@ -253,21 +266,98 @@ angular.module('kairos.services', [])
     return result;
   };
 
-  Schedule.prototype.save = function() {
+  function getSavedSchedulesMap() {
+    return localStorageWrapper.getItem('savedSchedules') || {};
+  }
 
+  function saveSchedulesMap(map) {
+    return localStorageWrapper.setItem('savedSchedules', map);
+  }
+
+  Schedule.prototype.save = function() {
+    var map = getSavedSchedulesMap();
+    var now = new Date();
+    var createdAt = map[this.id] != null ? map[this.id].createdAt : now;
+    map[this.id] = {
+      lastModified: now,
+      createdAt: createdAt,
+      version: 1,
+      id: this.id,
+      name: this.name,
+      data: this._data
+    };
+    saveSchedulesMap(map);
   };
 
-  return {
+  function consumeId() {
+    var newId = (localStorageWrapper.getItem('scheduleSequence') || 0) + 1;
+    localStorageWrapper.setItem('scheduleSequence', newId);
+    return newId;
+  }
+
+  var activeSchedule;
+
+  var scheduleManager = {
     createSchedule: function() {
-      return new Schedule();
+      return new Schedule(consumeId());
     },
     loadSchedule: function(id) {
-      return null;
+      var schedulesMap = getSavedSchedulesMap();
+      var scheduleData = schedulesMap[id];
+
+      if (scheduleData == null) {
+        return null;
+      }
+
+      var result = new Schedule(scheduleData.id);
+      result.name = scheduleData.name;
+      for (var i = 0; i < scheduleData.data.length; ++i) {
+        var groupData = scheduleData.data[i];
+        result.addGroupData(groupData);
+      }
+
+      return result;
+    },
+    removeSchedule: function(id) {
+      var map = getSavedSchedulesMap();
+      delete map[id];
+      saveSchedulesMap(map);
     },
     getSavedSchedules: function() {
-      return [];
+      var result = [];
+
+      angular.forEach(getSavedSchedulesMap(), function(value) {
+        result.push({
+          lastModified: value.lastModified,
+          id: value.id,
+          createdAt: value.createdAt,
+          name: value.name
+        });
+      });
+
+      return result;
+    },
+    getActiveSchedule: function() {
+      if (activeSchedule == null) {
+        scheduleManager.setActiveSchedule(scheduleManager.createSchedule());
+      }
+
+      return activeSchedule;
+    },
+    setActiveSchedule: function(schedule) {
+      if (schedule == null) {
+        return;
+      }
+
+      activeSchedule = schedule;
+      localStorageWrapper.setItem('activeScheduleId', schedule.id);
     }
   };
+
+  // Load schedule from last session.
+  activeSchedule = scheduleManager.loadSchedule(localStorageWrapper.getItem('activeScheduleId'));
+
+  return scheduleManager;
 })
 
 .filter('minutesToDate', function() {
