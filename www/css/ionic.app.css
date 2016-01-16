@@ -9746,7 +9746,7 @@ a.button {
   .group-item .available-places {
     margin-top: 5px;
     text-align: center; }
-  .group-item .group-conflict {
+  .group-item .group-conflict, .group-item .group-full {
     color: red; }
 
 .schedule-table-container {

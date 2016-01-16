@@ -61,7 +61,7 @@
           </span>
         </div>
         <div ng-if="group.notes">{{group.notes}}</div>
-        <div class="available-places">
+        <div class="available-places" ng-class="{'group-full': group.availablePlaces === 0}">
           {{group.availablePlaces}} disponible(s) de {{group.totalPlaces}}
           <progress max="{{group.totalPlaces}}"
             value="{{group.totalPlaces - group.availablePlaces}}"></progress>
