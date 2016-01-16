@@ -28,6 +28,41 @@ angular.module('kairos.controllers', ['kairos.services'])
       $scope.schedule.save();
     });
   };
+
+  $scope.getGroupData = function(day, timeBlock) {
+    var result = $scope.schedule.getGroupScheduleByTimeAndDay(timeBlock.startTime, day);
+
+    return result ? result.groupData : null;
+  };
+
+  function isFirstGroupBlock(schedule, timeBlock) {
+    return timeBlock.startTime - schedule.startTime < ScheduleTimeStep;
+  }
+
+  $scope.filteredDayIndexes = function(timeBlock) {
+    var result = [];
+    for (var i = 0; i < 7; ++i) {
+      var groupSchedule = $scope.schedule.getGroupScheduleByTimeAndDay(timeBlock.startTime, i);
+
+      if (groupSchedule == null ||
+        isFirstGroupBlock(groupSchedule.groupData.group.schedules[i][groupSchedule.scheduleIndex],
+          timeBlock)) {
+        result.push(i);
+      }
+    }
+
+    return result;
+  };
+
+  $scope.getNumberOfBlocks = function(day, timeBlock) {
+    var groupSchedule = $scope.schedule.getGroupScheduleByTimeAndDay(timeBlock.startTime, day);
+    if (groupSchedule == null) {
+      return 1;
+    }
+
+    var schedule = groupSchedule.groupData.group.schedules[day][groupSchedule.scheduleIndex];
+    return Math.ceil((schedule.endTime - schedule.startTime) / ScheduleTimeStep);
+  };
 })
 
 .controller('AddCourseController', function($scope, $ionicPopup, $q, stringUtils,

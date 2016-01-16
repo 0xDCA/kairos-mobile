@@ -164,7 +164,8 @@ angular.module('kairos.services', [])
     this.name = '';
   }
 
-  Schedule.prototype.getGroupDataByTimeAndDay = function(timeInMinutes, day) {
+  Schedule.prototype.getGroupScheduleByTimeAndDay = function(timeInMinutes, day) {
+    //console.log('getGroupDataByTimeAndDay(' + timeInMinutes + ', ' + day + ')');
     for (var i = 0; i < this._data.length; ++i) {
       var groupData = this._data[i];
       var group = groupData.group;
@@ -177,7 +178,10 @@ angular.module('kairos.services', [])
         var schedule = group.schedules[day][j];
         if (schedule.startTime <= timeInMinutes &&
           timeInMinutes < schedule.endTime) {
-          return groupData;
+          return {
+            groupData: groupData,
+            scheduleIndex: j
+          };
         }
       }
     }

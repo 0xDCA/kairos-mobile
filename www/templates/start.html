@@ -1,11 +1,37 @@
 <ion-view view-title="Kairos UN">
   <ion-content class="padding">
     <h1>Horario actual</h1>
-
-    <div class="text-center">
-      <button class="button icon-left ion-plus-circled button-balanced" ng-click="addCourse()">
-        Añadir curso
-      </button>
+    <div>
+      <div class="schedule-table-container">
+        <table class="schedule-table">
+          <tr>
+            <th>Hora</th>
+            <th ng-repeat="day in dayNames">
+              {{day}}
+            </th>
+          </tr>
+          <tr ng-repeat="timeBlock in timeBlocks">
+            <th>
+              <span class="group-time">{{timeBlock.startTime | minutesToDate | date:'h:mma'}}</span>
+            </th>
+            <td ng-repeat="dayIndex in filteredDayIndexes(timeBlock)"
+              rowspan="{{getNumberOfBlocks(dayIndex, timeBlock)}}">
+              <div ng-if="getGroupData(dayIndex, timeBlock) != null" class="schedule-entry">
+                <div class="course">{{getGroupData(dayIndex, timeBlock).course.id}} -
+                  {{getGroupData(dayIndex, timeBlock).course.name}}</div>
+                <div class="group">{{getGroupData(dayIndex, timeBlock).group.id}} -
+                  {{getGroupData(dayIndex, timeBlock).group.teacher}}</div>
+                <div class="place">{{getGroupData(dayIndex, timeBlock).group.place}}</div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="text-center">
+        <button class="button icon-left ion-plus-circled button-balanced" ng-click="addCourse()">
+          Añadir curso
+        </button>
+      </div>
     </div>
   </ion-content>
 </ion-view>
