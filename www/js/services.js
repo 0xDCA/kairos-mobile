@@ -134,6 +134,26 @@ angular.module('kairos.services', [])
   return stringUtils;
 })
 
+.factory('universityRepository', function(siaCourseRetrieverFactory, SiaApiUrl) {
+  'use strict';
+
+  return {
+    getUniversities: function() {
+      return [
+        {
+          id: 1,
+          name: 'Universidad Nacional de Colombia (Bogotá)',
+          retriever: siaCourseRetrieverFactory(SiaApiUrl)
+        },
+        {
+          id: 2,
+          name: 'Universidad Nacional de Colombia (Bogotá)',
+          retriever: siaCourseRetrieverFactory(SiaApiUrl)
+        }
+      ];
+    }
+  };
+})
 .filter('minutesToDate', function() {
   'use strict';
 

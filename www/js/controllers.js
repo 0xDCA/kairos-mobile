@@ -4,30 +4,30 @@ angular.module('kairos.controllers', ['kairos.services'])
   'use strict';
 })
 
-.controller('StartController', function($scope, dialogService) {
+.controller('StartController', function($scope, dialogService, FirstScheduleTime, LastScheduleTime,
+  ScheduleTimeStep) {
   'use strict';
 
   $scope.addCourse = function() {
     dialogService.fromTemplateUrl('templates/add-course.html');
   };
+
+  $scope.dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+  $scope.timeBlocks = [];
+  for (var i = FirstScheduleTime; i <= LastScheduleTime; i += ScheduleTimeStep) {
+    $scope.timeBlocks.push({
+      startTime: i,
+      endTime: i + ScheduleTimeStep
+    });
+  }
 })
 
-.controller('AddCourseController', function($scope, $ionicPopup, $q, siaCourseRetrieverFactory,
-  SiaApiUrl, stringUtils) {
+.controller('AddCourseController', function($scope, $ionicPopup, $q, stringUtils,
+  universityRepository) {
   'use strict';
 
-  $scope.universities = [
-    {
-      id: 1,
-      name: 'Universidad Nacional de Colombia (Bogotá)',
-      retriever: siaCourseRetrieverFactory(SiaApiUrl)
-    },
-    {
-      id: 2,
-      name: 'Universidad Nacional de Colombia (Bogotá)',
-      retriever: siaCourseRetrieverFactory(SiaApiUrl)
-    }
-  ];
+  $scope.universities = universityRepository.getUniversities();
   $scope.majors = [];
 
   // Although we only allow one university, major and course, we use an array because
@@ -131,7 +131,7 @@ angular.module('kairos.controllers', ['kairos.services'])
     });
   };
 
-  $scope.dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+  $scope.dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
   $scope.hasMoreScheduleDays = function(group, day) {
     for (var i = day + 1; i < 7; ++i) {
@@ -141,5 +141,17 @@ angular.module('kairos.controllers', ['kairos.services'])
     }
 
     return false;
+  };
+
+  $scope.selectGroup = function(group) {
+    var course = $scope.data.selectedCourses[0];
+    var major = $scope.data.selectedMajors[0];
+    var university = $scope.data.selectedUniversities[0];
+    $scope.close({
+      group: group,
+      course: course,
+      major: major,
+      university: university
+    });
   };
 });

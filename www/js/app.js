@@ -5,6 +5,10 @@ angular.module('kairos', ['ionic', 'kairos.controllers', 'kairos.services', 'ion
 
 .constant('MaxCourseResults', 50)
 
+.constant('FirstScheduleTime', 360)
+.constant('LastScheduleTime', 1320)
+.constant('ScheduleTimeStep', 60)
+
 .run(function($ionicPlatform, $window) {
   'use strict';
 
