@@ -115,19 +115,44 @@ angular.module('kairos.controllers', ['kairos.services'])
 })
 
 .controller('AddCourseController', function($scope, $ionicPopup, $q, stringUtils,
-  universityRepository) {
+  universityRepository, localStorageWrapper) {
   'use strict';
+
+  function findById(collection, id) {
+    for (var i = 0; i < collection.length; ++i) {
+      if (collection[i].id === id) {
+        return collection[i];
+      }
+    }
+
+    return null;
+  }
 
   $scope.universities = universityRepository.getUniversities();
   $scope.majors = [];
   $scope.groupConflicts = {};
 
+  var preselectedUniversity = $scope.universities[0];
+  var preselectedMajor = null;
+  var preselectedCourse = null;
+
+  var existingGroupData = $scope.params.existingGroupData;
+  if (existingGroupData != null) {
+    preselectedUniversity = findById($scope.universities, existingGroupData.university.id);
+    preselectedMajor = existingGroupData.major;
+    preselectedCourse = existingGroupData.course;
+  } else {
+    preselectedUniversity = findById($scope.universities,
+      localStorageWrapper.getItem('lastUniversityId'));
+    preselectedMajor = localStorageWrapper.getItem('lastMajor');
+  }
+
   // Although we only allow one university, major and course, we use an array because
   // ion-autocomplete requires it.
   $scope.data = {
-    selectedUniversities: [$scope.universities[0]],
-    selectedMajors: [],
-    selectedCourses: []
+    selectedUniversities: preselectedUniversity ? [preselectedUniversity] : [],
+    selectedMajors: preselectedMajor ? [preselectedMajor] : [],
+    selectedCourses: preselectedCourse ? [preselectedCourse] : []
   };
 
   function updateMajors() {
@@ -199,11 +224,17 @@ angular.module('kairos.controllers', ['kairos.services'])
   }
 
   $scope.$watchCollection('data.selectedUniversities', function() {
+    var university = $scope.data.selectedUniversities[0];
+    if (university) {
+      localStorageWrapper.setItem('lastUniversityId', university.id);
+    }
+
     updateMajors();
     updateGroups();
   });
 
   $scope.$watchCollection('data.selectedMajors', function() {
+    localStorageWrapper.setItem('lastMajor', $scope.data.selectedMajors[0]);
     updateGroups();
   });
 
@@ -269,6 +300,8 @@ angular.module('kairos.controllers', ['kairos.services'])
 
     $scope.close(getGroupData(group));
   };
+
+  updateGroups();
 })
 
 .controller('SavedSchedulesController', function($scope, scheduleManager, $ionicActionSheet,
