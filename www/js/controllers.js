@@ -41,8 +41,10 @@ angular.module('kairos.controllers', ['kairos.services'])
       $scope.schedule.addGroupData(groupData);
       $scope.schedule.save();
     }).catch(function() {
-      // If the user dismissed the dialog, let's re-add the old group.
-      $scope.schedule.addGroupData(toReplace);
+      if (toReplace != null) {
+        // If the user dismissed the dialog, let's re-add the old group.
+        $scope.schedule.addGroupData(toReplace);
+      }
     });
   };
 
@@ -143,7 +145,7 @@ angular.module('kairos.controllers', ['kairos.services'])
     preselectedCourse = existingGroupData.course;
   } else {
     preselectedUniversity = findById($scope.universities,
-      localStorageWrapper.getItem('lastUniversityId'));
+      localStorageWrapper.getItem('lastUniversityId')) || preselectedUniversity;
     preselectedMajor = localStorageWrapper.getItem('lastMajor');
   }
 
@@ -234,7 +236,10 @@ angular.module('kairos.controllers', ['kairos.services'])
   });
 
   $scope.$watchCollection('data.selectedMajors', function() {
-    localStorageWrapper.setItem('lastMajor', $scope.data.selectedMajors[0]);
+    var major = $scope.data.selectedMajors[0];
+    if (major != null) {
+      localStorageWrapper.setItem('lastMajor', major);
+    }
     updateGroups();
   });
 

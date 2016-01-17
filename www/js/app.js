@@ -1,7 +1,7 @@
 angular.module('kairos', ['ionic', 'kairos.controllers', 'kairos.services', 'ion-autocomplete'])
 
-//.constant('SiaApiUrl', 'http://sia.bogota.unal.edu.co')
-.constant('SiaApiUrl', '/external/siabogota')
+.constant('SiaApiUrl', 'http://sia.bogota.unal.edu.co')
+//.constant('SiaApiUrl', '/external/siabogota')
 
 .constant('MaxCourseResults', 50)
 
