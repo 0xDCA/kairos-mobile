@@ -1,25 +1,23 @@
-Ionic App Base
+Kairos Mobile
 =====================
 
-A starting project for Ionic that optionally supports using custom SCSS.
+A mobile application to create schedules for Universidad Nacional de Colombia.
 
-## Using this project
+## Environment setup
 
-We recommend using the [Ionic CLI](https://github.com/driftyco/ionic-cli) to create new Ionic projects that are based on this project but use a ready-made starter template.
+Make sure you have ```npm``` installed. Then, ```cd``` into the project's root and run:
 
-For example, to start a new Ionic project with the default tabs interface, make sure the `ionic` utility is installed:
+1. ```npm install -g bower cordova ionic gulp```
+2. ```npm install```
+3. ```bower install```
 
-```bash
-$ npm install -g ionic
-```
+## Build and run
 
-Then run:
+This app uses [Ionic Framework](http://ionicframework.com/), and you can build and run it just like
+any other Ionic app: ```ionic run android```.
 
-```bash
-$ ionic start myProject tabs
-```
-
-More info on this can be found on the Ionic [Getting Started](http://ionicframework.com/getting-started) page and the [Ionic CLI](https://github.com/driftyco/ionic-cli) repo.
-
-## Issues
-Issues have been disabled on this repo, if you do find an issue or have a question consider posting it on the [Ionic Forum](http://forum.ionicframework.com/).  Or else if there is truly an error, follow our guidelines for [submitting an issue](http://ionicframework.com/submit-issue/) to the main Ionic repository.
+If you use the live-reloading feature (i.e ```ionic run something -l```), you will need to access
+SIA's servers using the Ionic's built-in proxy, to avoid Same-Origin policy restrictions. Just
+comment the default URL constants in ```app.js``` and uncomment the constants that use the proxy
+(e.g comment ```.constant('SiaApiUrl', 'http://sia.bogota.unal.edu.co')``` and uncomment
+```.constant('SiaApiUrl', '/external/siabogota')```).
